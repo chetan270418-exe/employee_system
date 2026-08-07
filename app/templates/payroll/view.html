@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Salary Slip — {{ month_name }} {{ payroll.year }}{% endblock %}
+{% block page_title %}Salary Details{% endblock %}
+{% block page_subtitle %}{{ payroll.employee.name }} — {{ month_name }} {{ payroll.year }}{% endblock %}
+
+{% block content %}
+<div style="max-width:800px; margin:0 auto;">
+    <div class="card">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg, var(--primary) 0%, #283593 100%); padding:28px 32px; color:white;">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <div style="font-size:22px; font-weight:800; margin-bottom:4px;">Salary Slip</div>
+                    <div style="font-size:14px; opacity:0.8;">{{ month_name }} {{ payroll.year }}</div>
+                </div>
+                <span class="badge-pill badge-{{ payroll.status }}" style="font-size:13px;">{{ payroll.status.title() }}</span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Employee Info -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px; background:#f8f9ff; border-radius:10px; margin-bottom:24px;">
+                {% for label, val in [
+                    ('Employee Name', payroll.employee.name),
+                    ('Employee ID', payroll.employee.employee_id),
+                    ('Department', payroll.employee.department.name if payroll.employee.department else 'N/A'),
+                    ('Designation', payroll.employee.designation or 'N/A'),
+                    ('PAN Number', payroll.employee.pan_number or 'N/A'),
+                    ('Bank Account', payroll.employee.bank_account or 'N/A'),
+                ] %}
+                <div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">{{ label }}</div>
+                    <div style="font-weight:600; font-size:14px;">{{ val }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Attendance -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px;">
+                {% for label, val, color in [
+                    ('Working Days', payroll.working_days, '#1a237e'),
+                    ('Present Days', payroll.present_days, '#2e7d32'),
+                    ('Absent Days', payroll.absent_days, '#c62828'),
+                    ('Overtime Hrs', payroll.overtime_hours, '#e65100'),
+                ] %}
+                <div style="text-align:center; padding:16px; border-radius:10px; border:1.5px solid {{ color }}20; background:{{ color }}08;">
+                    <div style="font-size:24px; font-weight:800; color:{{ color }};">{{ val }}</div>
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">{{ label }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Earnings & Deductions -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+                <!-- Earnings -->
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#2e7d32; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #2e7d32;">
+                        <i class="fas fa-plus-circle"></i> Earnings
+                    </div>
+                    {% for label, val in [
+                        ('Basic Salary', payroll.base_salary),
+                        ('HRA (20%)', payroll.hra),
+                        ('DA (10%)', payroll.da),
+                        ('Travel Allowance', payroll.ta),
+                        ('Overtime', payroll.overtime_amount),
+                        ('Bonus', payroll.bonus),
+                    ] %}
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
+                        <span>{{ label }}</span>
+                        <span style="font-weight:600;">₹{{ "{:,.2f}".format(val|float) }}</span>
+                    </div>
+                    {% endfor %}
+                    <div style="display:flex; justify-content:space-between; padding:10px 0; font-size:15px; font-weight:800; color:#2e7d32;">
+                        <span>Gross Salary</span>
+                        <span>₹{{ "{:,.2f}".format(payroll.gross_salary|float) }}</span>
+                    </div>
+                </div>
+
+                <!-- Deductions -->
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#c62828; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid #c62828;">
+                        <i class="fas fa-minus-circle"></i> Deductions
+                    </div>
+                    {% for label, val in [
+                        ('Provident Fund (12%)', payroll.pf),
+                        ('ESI', payroll.esi),
+                        ('TDS (Income Tax)', payroll.tds),
+                        ('Leave Deduction', payroll.leave_deduction),
+                        ('Other Deductions', payroll.other_deductions),
+                    ] %}
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
+                        <span>{{ label }}</span>
+                        <span style="font-weight:600; color:#c62828;">₹{{ "{:,.2f}".format(val|float) }}</span>
+                    </div>
+                    {% endfor %}
+                    <div style="display:flex; justify-content:space-between; padding:10px 0; font-size:15px; font-weight:800; color:#c62828;">
+                        <span>Total Deductions</span>
+                        <span>₹{{ "{:,.2f}".format(payroll.total_deductions|float) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Salary -->
+            <div style="background:linear-gradient(135deg, var(--primary), #283593); border-radius:12px; padding:24px; text-align:center; color:white; margin-bottom:20px;">
+                <div style="font-size:13px; opacity:0.8; margin-bottom:4px;">NET TAKE HOME SALARY</div>
+                <div style="font-size:36px; font-weight:800;">₹{{ "{:,.2f}".format(payroll.net_salary|float) }}</div>
+                <div style="font-size:12px; opacity:0.6; margin-top:4px;">Generated on {{ payroll.generated_on.strftime('%d %B %Y') }}</div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <a href="{{ url_for('payroll.download_slip', payroll_id=payroll.id) }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-download"></i> Download PDF Slip
+                </a>
+                {% if current_user.role in ('admin','hr') %}
+                <form method="POST" action="{{ url_for('payroll.mark_paid', payroll_id=payroll.id) }}">
+                    <button type="submit" class="btn btn-success btn-lg" {% if payroll.status == 'paid' %}disabled{% endif %}>
+                        <i class="fas fa-check-circle"></i> {{ 'Paid ✓' if payroll.status == 'paid' else 'Mark as Paid' }}
+                    </button>
+                </form>
+                {% endif %}
+                <a href="javascript:history.back()" class="btn btn-outline btn-lg"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

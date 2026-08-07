@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block page_subtitle %}Generate and export reports{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+    <!-- Attendance Report -->
+    <div class="card" style="cursor:pointer;" onclick="window.location='{{ url_for('reports.attendance_report') }}'">
+        <div class="card-body" style="padding:32px; display:flex; align-items:center; gap:20px;">
+            <div style="width:64px; height:64px; background:linear-gradient(135deg,#1a237e,#3949ab); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:26px; color:white; flex-shrink:0; box-shadow:0 8px 24px rgba(26,35,126,0.3);">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+                <h3 style="font-size:18px; font-weight:700; margin:0 0 6px;">Attendance Report</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin:0;">View present, absent, late stats by department and month. Export to Excel.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payroll Report -->
+    <div class="card" style="cursor:pointer;" onclick="window.location='{{ url_for('reports.payroll_report') }}'">
+        <div class="card-body" style="padding:32px; display:flex; align-items:center; gap:20px;">
+            <div style="width:64px; height:64px; background:linear-gradient(135deg,#2e7d32,#43a047); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:26px; color:white; flex-shrink:0; box-shadow:0 8px 24px rgba(46,125,50,0.3);">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div>
+                <h3 style="font-size:18px; font-weight:700; margin:0 0 6px;">Payroll Report</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin:0;">Monthly salary summary with gross, deductions and net totals. Export to Excel.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Report -->
+    <div class="card" style="cursor:pointer;" onclick="window.location='{{ url_for('reports.leave_report') }}'">
+        <div class="card-body" style="padding:32px; display:flex; align-items:center; gap:20px;">
+            <div style="width:64px; height:64px; background:linear-gradient(135deg,#e65100,#ef6c00); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:26px; color:white; flex-shrink:0; box-shadow:0 8px 24px rgba(230,81,0,0.3);">
+                <i class="fas fa-umbrella-beach"></i>
+            </div>
+            <div>
+                <h3 style="font-size:18px; font-weight:700; margin:0 0 6px;">Leave Report</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin:0;">All leave requests filtered by year and status.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div class="card" style="cursor:pointer;" onclick="window.location='{{ url_for('admin.audit_log') }}'">
+        <div class="card-body" style="padding:32px; display:flex; align-items:center; gap:20px;">
+            <div style="width:64px; height:64px; background:linear-gradient(135deg,#880e4f,#ad1457); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:26px; color:white; flex-shrink:0; box-shadow:0 8px 24px rgba(136,14,79,0.3);">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h3 style="font-size:18px; font-weight:700; margin:0 0 6px;">Audit Log</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin:0;">Track all user actions — logins, edits, approvals with timestamps.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

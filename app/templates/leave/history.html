@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Leave History{% endblock %}
+{% block page_title %}Leave History{% endblock %}
+{% block page_subtitle %}All leave requests{% endblock %}
+
+{% block content %}
+<!-- Balance Row -->
+{% if leave_bal %}
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+    <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-sun"></i></div><div class="stat-value" data-counter="{{ leave_bal.casual_leave }}">0</div><div class="stat-label">Casual Leave Left</div></div>
+    <div class="stat-card stat-red"><div class="stat-icon"><i class="fas fa-thermometer-half"></i></div><div class="stat-value" data-counter="{{ leave_bal.sick_leave }}">0</div><div class="stat-label">Sick Leave Left</div></div>
+    <div class="stat-card stat-orange"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" data-counter="{{ leave_bal.earned_leave }}">0</div><div class="stat-label">Earned Leave Left</div></div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-list-alt" style="color:var(--primary); margin-right:8px;"></i>Leave Requests ({{ leaves|length }})</h3>
+        <a href="{{ url_for('leave.apply') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Request</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    {% if current_user.role in ('admin','hr') %}<th>Employee</th>{% endif %}
+                    <th>Leave Type</th><th>Period</th><th>Days</th><th>Reason</th><th>Status</th><th>Applied</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for leave in leaves %}
+            <tr>
+                {% if current_user.role in ('admin','hr') %}
+                <td>
+                    <div style="font-weight:600; font-size:13px;">{{ leave.employee.name }}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">{{ leave.employee.employee_id }}</div>
+                </td>
+                {% endif %}
+                <td><span class="badge-pill" style="background:#e8eaf6; color:#283593;">{{ leave.leave_type.title() }}</span></td>
+                <td style="font-size:13px; white-space:nowrap;">{{ leave.from_date.strftime('%d %b') }} – {{ leave.to_date.strftime('%d %b %Y') }}</td>
+                <td style="font-weight:700;">{{ leave.days }}</td>
+                <td style="font-size:13px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ leave.reason }}">{{ leave.reason }}</td>
+                <td>
+                    <span class="badge-pill badge-{{ leave.status }}">{{ leave.status.title() }}</span>
+                    {% if leave.hr_comments %}
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Note: {{ leave.hr_comments }}</div>
+                    {% endif %}
+                </td>
+                <td style="font-size:12px; color:var(--text-muted);">{{ leave.applied_on.strftime('%d %b %Y') }}</td>
+                <td>
+                    {% if leave.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('leave.cancel_leave', leave_id=leave.id) }}" id="cancel-{{ leave.id }}">
+                        <button type="button" class="btn btn-danger btn-sm"
+                                onclick="confirmAction('Cancel this leave request?', 'cancel-{{ leave.id }}')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </form>
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">
+                No leave requests found. <a href="{{ url_for('leave.apply') }}" style="color:var(--primary);">Apply now</a>
+            </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

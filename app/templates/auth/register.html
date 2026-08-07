@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | EmpTrack — Smart HR System</title>
+    <meta name="description" content="Register for EmpTrack Smart Employee Attendance & Payroll System">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="login-page">
+    <div style="position:absolute; width:400px; height:400px; border-radius:50%; background:rgba(255,214,0,0.05); top:-100px; right:-100px; animation: pulse 4s ease-in-out infinite;"></div>
+    <div style="position:absolute; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.03); bottom:-80px; left:-80px; animation: pulse 5s ease-in-out infinite 1s;"></div>
+
+    <div class="login-card" style="max-width: 500px;">
+        <div class="login-logo">
+            <div class="logo-icon">
+                <i class="fas fa-user-plus" style="font-size:26px;"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p>Join EmpTrack</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="margin-bottom:16px;">
+                    <i class="fas fa-exclamation-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label class="form-label" for="name">
+                    <i class="fas fa-user" style="color:var(--primary); margin-right:6px;"></i>Full Name
+                </label>
+                <input type="text" id="name" name="name" class="form-control"
+                       placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    <i class="fas fa-envelope" style="color:var(--primary); margin-right:6px;"></i>Email Address
+                </label>
+                <input type="email" id="email" name="email" class="form-control"
+                       placeholder="Enter your email" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="department_id">
+                    <i class="fas fa-building" style="color:var(--primary); margin-right:6px;"></i>Department
+                </label>
+                <select name="department_id" id="department_id" class="form-control">
+                    <option value="">Select Department (Optional)</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    <i class="fas fa-lock" style="color:var(--primary); margin-right:6px;"></i>Password
+                </label>
+                <input type="password" id="password" name="password" class="form-control"
+                       placeholder="Create a password" required minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">
+                    <i class="fas fa-lock" style="color:var(--primary); margin-right:6px;"></i>Confirm Password
+                </label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                       placeholder="Confirm your password" required minlength="6">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width:100%; justify-content:center; margin-top:24px;">
+                <i class="fas fa-user-check"></i> Register
+            </button>
+        </form>
+
+        <p style="text-align:center; font-size:13px; margin-top:20px;">
+            Already have an account? <a href="{{ url_for('auth.login') }}" style="color:var(--primary); font-weight:600; text-decoration:none;">Log In</a>
+        </p>
+
+        <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:20px;">
+            © 2024 EmpTrack — Powered by Flask & MySQL
+        </p>
+    </div>
+</div>
+
+<style>
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+</style>
+</body>
+</html>

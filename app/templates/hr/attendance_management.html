@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Manage Attendance{% endblock %}
+{% block page_title %}Attendance Management{% endblock %}
+{% block page_subtitle %}Manual attendance marking by HR{% endblock %}
+
+{% block content %}
+<!-- Date Picker -->
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:16px 20px;">
+        <form method="GET" style="display:flex; gap:12px; align-items:flex-end;">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Select Date</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}" style="width:200px;">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Load</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-calendar-check" style="color:var(--primary); margin-right:8px;"></i>Attendance for {{ selected_date.strftime('%d %B %Y') }}</h3>
+        <span style="font-size:13px; color:var(--text-muted);">{{ employees|length }} employees</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead><tr><th>Employee</th><th>Current Status</th><th>Check In</th><th>Check Out</th><th>Mark Attendance</th></tr></thead>
+            <tbody>
+            {% for emp in employees %}
+            {% set att = att_records.get(emp.id) %}
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="user-avatar-sm" style="background:linear-gradient(135deg,var(--primary),#5c6bc0);">{{ emp.name[0].upper() }}</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">{{ emp.name }}</div>
+                            <div style="font-size:11px; color:var(--text-muted);">{{ emp.employee_id }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if att %}
+                    <span class="badge-pill badge-{{ att.status }}">{{ att.status.replace('_',' ').title() }}</span>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">via {{ att.method }}</div>
+                    {% else %}
+                    <span class="badge-pill badge-absent">Not Marked</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:13px;">{{ att.check_in.strftime('%H:%M') if att and att.check_in else '—' }}</td>
+                <td style="font-size:13px;">{{ att.check_out.strftime('%H:%M') if att and att.check_out else '—' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('hr.manual_mark') }}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                        <input type="hidden" name="date" value="{{ selected_date }}">
+                        <select name="status" class="form-control" style="width:120px; padding:6px 10px; font-size:12px;">
+                            {% for s in ['present','absent','late','half_day','holiday'] %}
+                            <option value="{{ s }}" {{ 'selected' if att and att.status == s }}>{{ s.replace('_',' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="time" name="check_in" class="form-control" style="width:110px; padding:6px 8px; font-size:12px;"
+                               value="{{ att.check_in.strftime('%H:%M') if att and att.check_in else '' }}">
+                        <input type="time" name="check_out" class="form-control" style="width:110px; padding:6px 8px; font-size:12px;"
+                               value="{{ att.check_out.strftime('%H:%M') if att and att.check_out else '' }}">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

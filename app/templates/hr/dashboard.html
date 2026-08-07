@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}HR Dashboard{% endblock %}
+{% block page_title %}HR Dashboard{% endblock %}
+{% block page_subtitle %}{{ today.strftime('%A, %d %B %Y') }}{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:28px;">
+    <div class="stat-card stat-blue">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value" data-counter="{{ total_employees }}">0</div>
+        <div class="stat-label">Total Employees</div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+        <div class="stat-value" data-counter="{{ present_today }}">0</div>
+        <div class="stat-label">Present Today</div>
+    </div>
+    <div class="stat-card stat-orange">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value" data-counter="{{ late_today }}">0</div>
+        <div class="stat-label">Late Today</div>
+    </div>
+    <div class="stat-card stat-red">
+        <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-value" data-counter="{{ pending_leaves|length }}">0</div>
+        <div class="stat-label">Pending Leaves</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <!-- Pending Leave Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-clock" style="color:var(--primary); margin-right:8px;"></i>Pending Leave Requests</h3>
+            <a href="{{ url_for('hr.leave_approvals') }}" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% for leave in pending_leaves[:5] %}
+            <div style="padding:14px 18px; border-bottom:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:start; gap:10px;">
+                    <div>
+                        <div style="font-weight:700; font-size:14px;">{{ leave.employee.name }}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">
+                            {{ leave.leave_type.title() }} · {{ leave.days }} day(s) ·
+                            {{ leave.from_date.strftime('%d %b') }} to {{ leave.to_date.strftime('%d %b %Y') }}
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">{{ leave.reason[:60] }}{% if leave.reason|length > 60 %}...{% endif %}</div>
+                    </div>
+                    <div style="display:flex; gap:6px; flex-shrink:0;">
+                        <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=leave.id) }}">
+                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i></button>
+                        </form>
+                        <form method="POST" action="{{ url_for('hr.reject_leave', leave_id=leave.id) }}">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="padding:30px; text-align:center; color:var(--text-muted);">
+                <i class="fas fa-check-circle" style="font-size:36px; opacity:0.2; display:block; margin-bottom:10px;"></i>
+                No pending leave requests!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Today's Attendance -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-calendar-day" style="color:var(--primary); margin-right:8px;"></i>Today's Attendance</h3>
+            <a href="{{ url_for('hr.attendance_management') }}" class="btn btn-outline btn-sm">Manage</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% for att in today_attendance[:8] %}
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--border);">
+                <div class="user-avatar-sm" style="background:linear-gradient(135deg,var(--primary),#5c6bc0);">{{ att.employee.name[0].upper() }}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:600; font-size:13px;">{{ att.employee.name }}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">
+                        In: {{ att.check_in.strftime('%H:%M') if att.check_in else '—' }} &nbsp;|&nbsp;
+                        Out: {{ att.check_out.strftime('%H:%M') if att.check_out else '—' }}
+                    </div>
+                </div>
+                <span class="badge-pill badge-{{ att.status }}" style="font-size:11px;">{{ att.status.replace('_',' ').title() }}</span>
+            </div>
+            {% else %}
+            <div style="padding:30px; text-align:center; color:var(--text-muted);">No attendance records for today</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

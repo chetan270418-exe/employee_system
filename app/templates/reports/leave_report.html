@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Leave Report{% endblock %}
+{% block page_title %}Leave Report{% endblock %}
+{% block page_subtitle %}{{ year }} — All leave requests{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:14px 20px;">
+        <form method="GET" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Year</label>
+                <select name="year" class="form-control" style="width:100px;">
+                    {% for y in range(2023, 2027) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Status</label>
+                <select name="status" class="form-control" style="width:140px;">
+                    {% for s in ['all','pending','approved','rejected','cancelled'] %}
+                    <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-umbrella-beach" style="color:var(--primary); margin-right:8px;"></i>Leave Requests — {{ leaves|length }} found</h3>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead><tr><th>Employee</th><th>Type</th><th>Period</th><th>Days</th><th>Reason</th><th>Status</th><th>Approved By</th><th>Applied</th></tr></thead>
+            <tbody>
+            {% for l in leaves %}
+            <tr>
+                <td><div style="font-weight:600; font-size:13px;">{{ l.employee.name }}</div><div style="font-size:11px; color:var(--text-muted);">{{ l.employee.employee_id }}</div></td>
+                <td><span class="badge-pill" style="background:#e8eaf6; color:#283593;">{{ l.leave_type.title() }}</span></td>
+                <td style="font-size:13px; white-space:nowrap;">{{ l.from_date.strftime('%d %b') }} – {{ l.to_date.strftime('%d %b %Y') }}</td>
+                <td style="font-weight:700;">{{ l.days }}</td>
+                <td style="font-size:13px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ l.reason }}">{{ l.reason }}</td>
+                <td><span class="badge-pill badge-{{ l.status }}">{{ l.status.title() }}</span></td>
+                <td style="font-size:13px;">{{ l.approver.name if l.approver else '—' }}</td>
+                <td style="font-size:12px; color:var(--text-muted);">{{ l.applied_on.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No leave requests found</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if employee else 'Add' }} Employee{% endblock %}
+{% block page_title %}{{ 'Edit Employee' if employee else 'Add New Employee' }}{% endblock %}
+{% block page_subtitle %}{{ employee.name if employee else 'Fill in employee details below' }}{% endblock %}
+
+{% block content %}
+<div style="max-width:900px; margin:0 auto;">
+<form method="POST" enctype="multipart/form-data">
+    <!-- Personal Info -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user" style="color:var(--primary); margin-right:8px;"></i>Personal Information</h3>
+        </div>
+        <div class="card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                <div class="form-group" style="grid-column:span 2;">
+                    <label class="form-label">Full Name <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" required
+                           value="{{ employee.name if employee else '' }}" placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" required
+                           value="{{ employee.email if employee else '' }}"
+                           {% if employee %}readonly style="background:#f5f5f5;"{% endif %}
+                           placeholder="employee@company.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control"
+                           value="{{ employee.phone if employee else '' }}" placeholder="+91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="form-control"
+                           value="{{ employee.date_of_birth.strftime('%Y-%m-%d') if employee and employee.date_of_birth else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-control">
+                        <option value="">Select Gender</option>
+                        {% for g in ['male','female','other'] %}
+                        <option value="{{ g }}" {{ 'selected' if employee and employee.gender == g }}>{{ g.title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column:span 2;">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="2" placeholder="Full address">{{ employee.address if employee else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Info -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-briefcase" style="color:var(--primary); margin-right:8px;"></i>Job Information</h3>
+        </div>
+        <div class="card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select name="department_id" class="form-control">
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" {{ 'selected' if employee and employee.department_id == dept.id }}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Designation</label>
+                    <input type="text" name="designation" class="form-control"
+                           value="{{ employee.designation if employee else '' }}" placeholder="e.g. Software Engineer">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-control">
+                        {% for r in ['employee','hr','admin'] %}
+                        <option value="{{ r }}" {{ 'selected' if employee and employee.role == r }}>{{ r.title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Employment Type</label>
+                    <select name="employment_type" class="form-control">
+                        {% for et in ['full_time','part_time','contract'] %}
+                        <option value="{{ et }}" {{ 'selected' if employee and employee.employment_type == et }}>{{ et.replace('_',' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Join Date</label>
+                    <input type="date" name="join_date" class="form-control"
+                           value="{{ employee.join_date.strftime('%Y-%m-%d') if employee and employee.join_date else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Base Salary (₹) <span class="required">*</span></label>
+                    <input type="number" name="base_salary" class="form-control" step="0.01" min="0"
+                           value="{{ employee.base_salary if employee else '' }}" placeholder="50000">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank & Tax Info -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-university" style="color:var(--primary); margin-right:8px;"></i>Bank & Tax Details</h3>
+        </div>
+        <div class="card-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                <div class="form-group">
+                    <label class="form-label">Bank Account Number</label>
+                    <input type="text" name="bank_account" class="form-control"
+                           value="{{ employee.bank_account if employee else '' }}" placeholder="Account number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" name="bank_name" class="form-control"
+                           value="{{ employee.bank_name if employee else '' }}" placeholder="e.g. SBI, HDFC">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PAN Number</label>
+                    <input type="text" name="pan_number" class="form-control" maxlength="10"
+                           value="{{ employee.pan_number if employee else '' }}" placeholder="ABCDE1234F">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Aadhaar Number</label>
+                    <input type="text" name="aadhaar_number" class="form-control" maxlength="12"
+                           value="{{ employee.aadhaar_number if employee else '' }}" placeholder="12-digit Aadhaar">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-lock" style="color:var(--primary); margin-right:8px;"></i>
+                {{ 'Change Password' if employee else 'Set Password' }}
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if not employee %}
+            <div class="form-group">
+                <label class="form-label">Password <span class="required">*</span></label>
+                <input type="password" name="password" class="form-control" placeholder="Min 6 characters" value="Welcome@123">
+                <small style="color:var(--text-muted); font-size:12px;">Default: Welcome@123 — employee should change on first login</small>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label class="form-label">New Password (leave blank to keep current)</label>
+                <input type="password" name="new_password" class="form-control" placeholder="Enter new password">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i> {{ 'Update Employee' if employee else 'Add Employee' }}
+        </button>
+        <a href="{{ url_for('admin.employees') }}" class="btn btn-outline btn-lg">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+    </div>
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}{{ emp.name }} — Profile{% endblock %}
+{% block page_title %}{{ emp.name }}{% endblock %}
+{% block page_subtitle %}{{ emp.employee_id }} · {{ emp.designation or 'No designation' }}{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start;">
+    <!-- Left Panel -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Profile Card -->
+        <div class="card">
+            <div class="card-body" style="text-align:center; padding:28px 20px;">
+                <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, var(--primary), #5c6bc0); display:inline-flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:white; margin-bottom:14px; box-shadow:0 8px 24px rgba(26,35,126,0.3);">
+                    {{ emp.name[0].upper() }}
+                </div>
+                <h3 style="font-size:18px; font-weight:800; margin:0 0 4px;">{{ emp.name }}</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin:0 0 10px;">{{ emp.designation or '—' }}</p>
+                <span class="badge-pill badge-{{ emp.role }}">{{ emp.role.title() }}</span>
+                <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px; text-align:left;">
+                    <div style="display:flex; gap:10px; font-size:13px;">
+                        <i class="fas fa-envelope" style="color:var(--primary); width:16px; margin-top:2px;"></i>
+                        <span>{{ emp.email }}</span>
+                    </div>
+                    <div style="display:flex; gap:10px; font-size:13px;">
+                        <i class="fas fa-phone" style="color:var(--primary); width:16px; margin-top:2px;"></i>
+                        <span>{{ emp.phone or '—' }}</span>
+                    </div>
+                    <div style="display:flex; gap:10px; font-size:13px;">
+                        <i class="fas fa-building" style="color:var(--primary); width:16px; margin-top:2px;"></i>
+                        <span>{{ emp.department.name if emp.department else '—' }}</span>
+                    </div>
+                    <div style="display:flex; gap:10px; font-size:13px;">
+                        <i class="fas fa-calendar" style="color:var(--primary); width:16px; margin-top:2px;"></i>
+                        <span>Joined {{ emp.join_date.strftime('%d %b %Y') if emp.join_date else '—' }}</span>
+                    </div>
+                </div>
+                <div style="margin-top:16px; padding:12px; background:#f0f2ff; border-radius:10px;">
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">Base Salary</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--primary);">₹{{ "{:,.0f}".format(emp.base_salary|float) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+                <a href="{{ url_for('admin.edit_employee', emp_id=emp.id) }}" class="btn btn-primary" style="justify-content:center;"><i class="fas fa-edit"></i> Edit Employee</a>
+                <a href="{{ url_for('documents.index', emp_id=emp.id) }}" class="btn btn-outline" style="justify-content:center;"><i class="fas fa-folder-open"></i> Documents</a>
+                <form method="POST" action="{{ url_for('admin.deactivate_employee', emp_id=emp.id) }}" id="deact-{{ emp.id }}">
+                    <button type="button" class="btn btn-danger" style="width:100%; justify-content:center;"
+                            onclick="confirmAction('Deactivate {{ emp.name }}?', 'deact-{{ emp.id }}')">
+                        <i class="fas fa-user-slash"></i> Deactivate
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- This Month Attendance -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-calendar-check" style="color:var(--primary); margin-right:8px;"></i>This Month Attendance</h3>
+                <span style="font-size:13px; color:var(--text-muted);">
+                    {{ att_this_month|length }} records
+                </span>
+            </div>
+            <div class="card-body">
+                {% set present = att_this_month | selectattr('status', 'in', ['present','late']) | list | length %}
+                {% set absent = att_this_month | selectattr('status', 'equalto', 'absent') | list | length %}
+                {% set late = att_this_month | selectattr('status', 'equalto', 'late') | list | length %}
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px;">
+                    <div style="text-align:center; padding:16px; background:#e8f5e9; border-radius:10px;">
+                        <div style="font-size:28px; font-weight:800; color:#2e7d32;">{{ present }}</div>
+                        <div style="font-size:12px; color:#2e7d32; font-weight:600;">Present</div>
+                    </div>
+                    <div style="text-align:center; padding:16px; background:#ffebee; border-radius:10px;">
+                        <div style="font-size:28px; font-weight:800; color:#c62828;">{{ absent }}</div>
+                        <div style="font-size:12px; color:#c62828; font-weight:600;">Absent</div>
+                    </div>
+                    <div style="text-align:center; padding:16px; background:#fff8e1; border-radius:10px;">
+                        <div style="font-size:28px; font-weight:800; color:#f57f17;">{{ late }}</div>
+                        <div style="font-size:12px; color:#f57f17; font-weight:600;">Late</div>
+                    </div>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted);">Recent records (last 5)</div>
+                <div style="margin-top:8px;">
+                {% for a in att_this_month[:5] %}
+                    <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px;">
+                        <span>{{ a.date.strftime('%d %b') }}</span>
+                        <span>{{ a.check_in.strftime('%H:%M') if a.check_in else '—' }} – {{ a.check_out.strftime('%H:%M') if a.check_out else '—' }}</span>
+                        <span class="badge-pill badge-{{ a.status }}" style="padding:2px 10px; font-size:11px;">{{ a.status.replace('_',' ').title() }}</span>
+                    </div>
+                {% else %}
+                    <p style="color:var(--text-muted); font-size:13px;">No attendance records this month.</p>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payrolls -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-money-bill" style="color:var(--primary); margin-right:8px;"></i>Recent Payrolls</h3>
+            </div>
+            <div class="card-body" style="padding:0;">
+                <table class="custom-table">
+                    <thead><tr><th>Month/Year</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Status</th><th>Slip</th></tr></thead>
+                    <tbody>
+                    {% import 'calendar' as cal %}
+                    {% for p in recent_payrolls %}
+                    <tr>
+                        <td style="font-weight:600;">
+                            {% set months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+                            {{ months[p.month] }} {{ p.year }}
+                        </td>
+                        <td>₹{{ "{:,.0f}".format(p.gross_salary|float) }}</td>
+                        <td style="color:var(--danger);">₹{{ "{:,.0f}".format(p.total_deductions|float) }}</td>
+                        <td style="font-weight:700; color:var(--success);">₹{{ "{:,.0f}".format(p.net_salary|float) }}</td>
+                        <td><span class="badge-pill badge-{{ p.status }}">{{ p.status.title() }}</span></td>
+                        <td><a href="{{ url_for('payroll.download_slip', payroll_id=p.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-download"></i></a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No payroll records</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Leave Balance -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-umbrella-beach" style="color:var(--primary); margin-right:8px;"></i>Leave Balance</h3>
+            </div>
+            <div class="card-body">
+                {% if leave_bal %}
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+                    <div style="text-align:center; padding:16px; background:#e3f2fd; border-radius:10px;">
+                        <div style="font-size:24px; font-weight:800; color:#1565c0;">{{ leave_bal.casual_leave }}</div>
+                        <div style="font-size:12px; color:#1565c0; font-weight:600;">Casual</div>
+                    </div>
+                    <div style="text-align:center; padding:16px; background:#fce4ec; border-radius:10px;">
+                        <div style="font-size:24px; font-weight:800; color:#880e4f;">{{ leave_bal.sick_leave }}</div>
+                        <div style="font-size:12px; color:#880e4f; font-weight:600;">Sick</div>
+                    </div>
+                    <div style="text-align:center; padding:16px; background:#f3e5f5; border-radius:10px;">
+                        <div style="font-size:24px; font-weight:800; color:#4a148c;">{{ leave_bal.earned_leave }}</div>
+                        <div style="font-size:12px; color:#4a148c; font-weight:600;">Earned</div>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color:var(--text-muted);">No leave balance record found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

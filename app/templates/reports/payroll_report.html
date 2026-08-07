@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Payroll Report{% endblock %}
+{% block page_title %}Payroll Report{% endblock %}
+{% block page_subtitle %}{{ month_name }} {{ year }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:14px 20px;">
+        <form method="GET" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Month</label>
+                <select name="month" class="form-control" style="width:140px;">
+                    {% set months_l = ['','January','February','March','April','May','June','July','August','September','October','November','December'] %}
+                    {% for m in range(1,13) %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ months_l[m] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Year</label>
+                <select name="year" class="form-control" style="width:100px;">
+                    {% for y in range(2023, 2027) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+            <a href="{{ url_for('reports.export_payroll_excel', month=month, year=year) }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- Summary -->
+<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+    <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-rupee-sign"></i></div><div class="stat-value" style="font-size:22px;">₹{{ "{:,.0f}".format(total_gross) }}</div><div class="stat-label">Total Gross</div></div>
+    <div class="stat-card stat-red"><div class="stat-icon"><i class="fas fa-minus-circle"></i></div><div class="stat-value" style="font-size:22px;">₹{{ "{:,.0f}".format(total_deductions) }}</div><div class="stat-label">Total Deductions</div></div>
+    <div class="stat-card stat-green"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-value" style="font-size:22px;">₹{{ "{:,.0f}".format(total_net) }}</div><div class="stat-label">Total Net Payout</div></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-money-bill-wave" style="color:var(--primary); margin-right:8px;"></i>{{ month_name }} {{ year }} — {{ payrolls|length }} Employees</h3>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead><tr><th>Employee</th><th>Dept</th><th>Base</th><th>Gross</th><th>PF</th><th>TDS</th><th>Total Ded.</th><th>Net Salary</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for p in payrolls %}
+            <tr>
+                <td><div style="font-weight:600; font-size:13px;">{{ p.employee.name }}</div><div style="font-size:11px; color:var(--text-muted);">{{ p.employee.employee_id }}</div></td>
+                <td style="font-size:13px;">{{ p.employee.department.name if p.employee.department else '—' }}</td>
+                <td style="font-size:13px;">₹{{ "{:,.0f}".format(p.base_salary|float) }}</td>
+                <td style="font-weight:600;">₹{{ "{:,.0f}".format(p.gross_salary|float) }}</td>
+                <td style="font-size:13px; color:var(--danger);">₹{{ "{:,.0f}".format(p.pf|float) }}</td>
+                <td style="font-size:13px; color:var(--danger);">₹{{ "{:,.0f}".format(p.tds|float) }}</td>
+                <td style="font-weight:600; color:var(--danger);">₹{{ "{:,.0f}".format(p.total_deductions|float) }}</td>
+                <td style="font-weight:800; color:var(--success); font-size:15px;">₹{{ "{:,.0f}".format(p.net_salary|float) }}</td>
+                <td><span class="badge-pill badge-{{ p.status }}">{{ p.status.title() }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No payroll data for this period</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

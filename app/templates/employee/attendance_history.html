@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Attendance History{% endblock %}
+{% block page_title %}Attendance History{% endblock %}
+{% block page_subtitle %}Your attendance records{% endblock %}
+
+{% block content %}
+<!-- Month Filter -->
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:14px 20px;">
+        <form method="GET" style="display:flex; gap:12px; align-items:flex-end;">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Month</label>
+                <select name="month" class="form-control" style="width:150px;">
+                    {% for m in range(1,13) %}
+                    {% set months = ['','January','February','March','April','May','June','July','August','September','October','November','December'] %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ months[m] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Year</label>
+                <select name="year" class="form-control" style="width:100px;">
+                    {% for y in range(2023, 2027) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> View</button>
+        </form>
+    </div>
+</div>
+
+<!-- Summary -->
+{% set present_ct = records | selectattr('status', 'in', ['present','late']) | list | length %}
+{% set absent_ct = records | selectattr('status', 'equalto', 'absent') | list | length %}
+{% set late_ct = records | selectattr('status', 'equalto', 'late') | list | length %}
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;">
+    <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-calendar-alt"></i></div><div class="stat-value">{{ records|length }}</div><div class="stat-label">Total Records</div></div>
+    <div class="stat-card stat-green"><div class="stat-icon"><i class="fas fa-check"></i></div><div class="stat-value">{{ present_ct }}</div><div class="stat-label">Present Days</div></div>
+    <div class="stat-card stat-orange"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value">{{ late_ct }}</div><div class="stat-label">Late Days</div></div>
+    <div class="stat-card stat-red"><div class="stat-icon"><i class="fas fa-times"></i></div><div class="stat-value">{{ absent_ct }}</div><div class="stat-label">Absent Days</div></div>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead><tr><th>Date</th><th>Day</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Overtime</th><th>Method</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for r in records %}
+            <tr>
+                <td style="font-weight:600;">{{ r.date.strftime('%d %b %Y') }}</td>
+                <td style="font-size:13px; color:var(--text-muted);">{{ r.date.strftime('%A') }}</td>
+                <td style="font-size:13px;">{{ r.check_in.strftime('%H:%M') if r.check_in else '—' }}</td>
+                <td style="font-size:13px;">{{ r.check_out.strftime('%H:%M') if r.check_out else '—' }}</td>
+                <td style="font-size:13px; font-weight:600;">{{ "%.1f"|format(r.work_hours or 0) }} hrs</td>
+                <td style="font-size:13px; color:var(--success);">{{ "%.1f"|format(r.overtime_hours or 0) }} hrs</td>
+                <td><span class="badge-pill" style="background:#e8eaf6; color:#283593; font-size:11px;">{{ r.method.upper() }}</span></td>
+                <td><span class="badge-pill badge-{{ r.status }}">{{ r.status.replace('_',' ').title() }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No attendance records found</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

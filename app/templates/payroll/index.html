@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Payroll Management{% endblock %}
+{% block page_title %}Payroll Management{% endblock %}
+{% block page_subtitle %}Generate and manage employee salaries{% endblock %}
+
+{% block content %}
+<!-- Month Selector -->
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:16px 20px;">
+        <form method="GET" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Month</label>
+                <select name="month" class="form-control" style="width:140px;">
+                    {% set months_l = ['','January','February','March','April','May','June','July','August','September','October','November','December'] %}
+                    {% for m in range(1,13) %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ months_l[m] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Year</label>
+                <select name="year" class="form-control" style="width:100px;">
+                    {% for y in range(2023, 2027) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Load</button>
+        </form>
+    </div>
+</div>
+
+<!-- Generate All -->
+<div class="card" style="margin-bottom:20px; border-left:4px solid var(--primary);">
+    <div class="card-body" style="padding:16px 20px;">
+        <form method="POST" action="{{ url_for('payroll.generate_all') }}" id="genAllForm" style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+            <input type="hidden" name="month" value="{{ month }}">
+            <input type="hidden" name="year" value="{{ year }}">
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Bonus (₹) — applies to all</label>
+                <input type="number" name="bonus" class="form-control" value="0" step="0.01" min="0" style="width:130px;">
+            </div>
+            <div>
+                <label class="form-label" style="margin-bottom:5px;">Other Deductions (₹)</label>
+                <input type="number" name="other_deductions" class="form-control" value="0" step="0.01" min="0" style="width:150px;">
+            </div>
+            <button type="button" class="btn btn-success" onclick="confirmAction('Generate payroll for ALL employees for {{ months_l[month] }} {{ year }}?', \'genAllForm\')">
+                <i class="fas fa-bolt"></i> Generate All ({{ employees|length }} employees)
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Payroll Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-money-bill-wave" style="color:var(--primary); margin-right:8px;"></i>
+            {{ months_l[month] }} {{ year }} Payroll ({{ payrolls|length }} generated)
+        </h3>
+        <span style="font-size:14px; font-weight:700; color:var(--success);">
+            Total: ₹{{ "{:,.0f}".format(payrolls | sum(attribute='net_salary') | float) }}
+        </span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Employee</th><th>Present Days</th><th>Gross</th><th>PF</th><th>TDS</th>
+                    <th>Total Ded.</th><th>Net Salary</th><th>Status</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in payrolls %}
+            <tr>
+                <td>
+                    <div style="font-weight:700; font-size:13px;">{{ p.employee.name }}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">{{ p.employee.employee_id }}</div>
+                </td>
+                <td>{{ p.present_days }}/{{ p.working_days }}</td>
+                <td style="font-weight:600;">₹{{ "{:,.0f}".format(p.gross_salary|float) }}</td>
+                <td style="font-size:13px;">₹{{ "{:,.0f}".format(p.pf|float) }}</td>
+                <td style="font-size:13px;">₹{{ "{:,.0f}".format(p.tds|float) }}</td>
+                <td style="color:var(--danger); font-weight:600;">₹{{ "{:,.0f}".format(p.total_deductions|float) }}</td>
+                <td style="font-weight:800; color:var(--success); font-size:15px;">₹{{ "{:,.0f}".format(p.net_salary|float) }}</td>
+                <td><span class="badge-pill badge-{{ p.status }}">{{ p.status.title() }}</span></td>
+                <td>
+                    <div style="display:flex; gap:6px;">
+                        <a href="{{ url_for('payroll.view_payroll', payroll_id=p.id) }}" class="btn btn-outline btn-sm" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('payroll.download_slip', payroll_id=p.id) }}" class="btn btn-primary btn-sm" title="PDF Slip"><i class="fas fa-download"></i></a>
+                        {% if p.status != 'paid' %}
+                        <form method="POST" action="{{ url_for('payroll.mark_paid', payroll_id=p.id) }}">
+                            <button type="submit" class="btn btn-success btn-sm" title="Mark Paid"><i class="fas fa-check"></i></button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">
+                <i class="fas fa-file-invoice-dollar" style="font-size:40px; opacity:0.2; display:block; margin-bottom:12px;"></i>
+                No payroll generated for {{ months_l[month] }} {{ year }}. Click "Generate All" to start.
+            </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

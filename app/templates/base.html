@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Payroll System{% endblock %} | EmpTrack</title>
+    <meta name="description" content="Cloud-Based Smart Employee Attendance and Payroll Management System">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999;"
+     onclick="document.getElementById('sidebar').classList.remove('open'); this.style.display='none';"></div>
+
+<!-- ======================== SIDEBAR ======================== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo">E</div>
+        <h2>EmpTrack</h2>
+        <span>Smart HR System</span>
+    </div>
+
+    <div class="sidebar-nav">
+        <!-- Dashboard -->
+        <div class="nav-section-label">Dashboard</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            {% if current_user.role == 'admin' %}
+            <li class="nav-item">
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-link">
+                    <i class="fas fa-tachometer-alt nav-icon"></i> Dashboard
+                </a>
+            </li>
+            {% elif current_user.role == 'hr' %}
+            <li class="nav-item">
+                <a href="{{ url_for('hr.dashboard') }}" class="nav-link">
+                    <i class="fas fa-tachometer-alt nav-icon"></i> Dashboard
+                </a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a href="{{ url_for('employee.dashboard') }}" class="nav-link">
+                    <i class="fas fa-tachometer-alt nav-icon"></i> My Dashboard
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <!-- Attendance -->
+        <div class="nav-section-label">Attendance</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            <li class="nav-item">
+                <a href="{{ url_for('attendance.mark') }}" class="nav-link">
+                    <i class="fas fa-fingerprint nav-icon"></i> Mark Attendance
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('attendance.qr_scan') }}" class="nav-link">
+                    <i class="fas fa-qrcode nav-icon"></i> QR Scan
+                </a>
+            </li>
+            {% if current_user.role in ('admin', 'hr') %}
+            <li class="nav-item">
+                <a href="{{ url_for('attendance.qr_generate') }}" class="nav-link">
+                    <i class="fas fa-qrcode nav-icon"></i> Generate QR
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('hr.attendance_management') }}" class="nav-link">
+                    <i class="fas fa-calendar-check nav-icon"></i> Manage Attendance
+                </a>
+            </li>
+            {% endif %}
+            {% if current_user.role == 'employee' %}
+            <li class="nav-item">
+                <a href="{{ url_for('employee.attendance_history') }}" class="nav-link">
+                    <i class="fas fa-history nav-icon"></i> Att. History
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <!-- Leave -->
+        <div class="nav-section-label">Leave</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            <li class="nav-item">
+                <a href="{{ url_for('leave.apply') }}" class="nav-link">
+                    <i class="fas fa-paper-plane nav-icon"></i> Apply Leave
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('leave.history') }}" class="nav-link">
+                    <i class="fas fa-list-alt nav-icon"></i> Leave History
+                </a>
+            </li>
+            {% if current_user.role in ('admin', 'hr') %}
+            <li class="nav-item">
+                <a href="{{ url_for('hr.leave_approvals') }}" class="nav-link">
+                    <i class="fas fa-check-circle nav-icon"></i> Leave Approvals
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <!-- Payroll -->
+        <div class="nav-section-label">Payroll</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            {% if current_user.role in ('admin', 'hr') %}
+            <li class="nav-item">
+                <a href="{{ url_for('payroll.index') }}" class="nav-link">
+                    <i class="fas fa-money-bill-wave nav-icon"></i> Payroll
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a href="{{ url_for('employee.salary_history') }}" class="nav-link">
+                    <i class="fas fa-receipt nav-icon"></i> Salary Slips
+                </a>
+            </li>
+        </ul>
+
+        <!-- Admin Section -->
+        {% if current_user.role == 'admin' %}
+        <div class="nav-section-label">Admin</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            <li class="nav-item">
+                <a href="{{ url_for('admin.employees') }}" class="nav-link">
+                    <i class="fas fa-users nav-icon"></i> Employees
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('admin.departments') }}" class="nav-link">
+                    <i class="fas fa-building nav-icon"></i> Departments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('reports.index') }}" class="nav-link">
+                    <i class="fas fa-chart-bar nav-icon"></i> Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('admin.audit_log') }}" class="nav-link">
+                    <i class="fas fa-shield-alt nav-icon"></i> Audit Log
+                </a>
+            </li>
+        </ul>
+        {% elif current_user.role == 'hr' %}
+        <div class="nav-section-label">HR Tools</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            <li class="nav-item">
+                <a href="{{ url_for('reports.index') }}" class="nav-link">
+                    <i class="fas fa-chart-bar nav-icon"></i> Reports
+                </a>
+            </li>
+        </ul>
+        {% endif %}
+
+        <!-- Documents -->
+        <div class="nav-section-label">Documents</div>
+        <ul class="nav-list" style="list-style:none; padding:0; margin:0;">
+            <li class="nav-item">
+                <a href="{{ url_for('documents.index') }}" class="nav-link">
+                    <i class="fas fa-folder-open nav-icon"></i> Documents
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar-sm">{{ current_user.name[0].upper() }}</div>
+            <div class="user-info-text">
+                <div class="name">{{ current_user.name }}</div>
+                <div class="role">{{ current_user.role.title() }}</div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" title="Logout" style="color:rgba(255,255,255,0.4); margin-left:auto;">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- ======================== MAIN CONTENT ======================== -->
+<div class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <button id="sidebarToggle" class="header-btn d-none" style="display:flex;" aria-label="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div>
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                <p class="page-subtitle">{% block page_subtitle %}Welcome back, {{ current_user.name }}{% endblock %}</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('attendance.mark') }}" class="header-btn" title="Mark Attendance">
+                <i class="fas fa-fingerprint"></i>
+            </a>
+            <a href="{{ url_for('leave.apply') }}" class="header-btn" title="Apply Leave">
+                <i class="fas fa-paper-plane"></i>
+            </a>
+            <a href="{{ url_for('auth.profile') }}" class="header-btn" title="Profile">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="header-btn" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <div style="padding: 0 28px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" data-dismiss="true">
+                    <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                    <button class="alert-close" style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:16px; color:inherit;">&times;</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Page Content -->
+    <div class="content-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

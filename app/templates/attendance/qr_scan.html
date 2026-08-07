@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}QR Code Scanner{% endblock %}
+{% block page_title %}QR Code Attendance{% endblock %}
+{% block page_subtitle %}Scan the office QR code to mark attendance{% endblock %}
+
+{% block extra_head %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:550px; margin:0 auto;">
+    {% if existing %}
+    <div class="alert alert-{{ 'success' if existing.check_out else 'info' }}" style="margin-bottom:20px;">
+        <i class="fas fa-{{ 'check-circle' if existing.check_out else 'info-circle' }}"></i>
+        {% if existing.check_out %}
+            Today: Checked in at {{ existing.check_in.strftime('%H:%M') }} · Checked out at {{ existing.check_out.strftime('%H:%M') }}
+        {% else %}
+            Checked in at {{ existing.check_in.strftime('%H:%M') }} — Scan again to check out!
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-qrcode" style="color:var(--primary); margin-right:8px;"></i>Scan QR Code</h3>
+            <span class="badge-pill" style="background:#e8f5e9; color:#2e7d32;" id="scanStatus">Ready to Scan</span>
+        </div>
+        <div class="card-body">
+            <!-- Scanner -->
+            <div id="qr-reader" style="border-radius:12px; overflow:hidden; background:#000; min-height:250px;"></div>
+
+            <!-- Manual Input Fallback -->
+            <div style="margin-top:16px; padding:16px; background:#f8f9ff; border-radius:10px;">
+                <p style="font-size:13px; color:var(--text-muted); margin:0 0 10px;">Can't scan? Enter QR data manually:</p>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="manualQR" class="form-control" placeholder="Paste QR code data here...">
+                    <button onclick="submitManualQR()" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Submit</button>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="qrResult" style="margin-top:16px; display:none;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let scanning = true;
+
+const html5QrCode = new Html5Qrcode("qr-reader");
+html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (decodedText) => {
+        if (!scanning) return;
+        scanning = false;
+        html5QrCode.stop();
+        submitQR(decodedText);
+    },
+    (err) => {}
+).catch(err => {
+    document.getElementById('qr-reader').innerHTML =
+        '<div style="padding:40px; text-align:center; color:#fff;"><i class="fas fa-video-slash" style="font-size:40px; margin-bottom:12px; display:block;"></i>Camera not available. Use manual input below.</div>';
+});
+
+async function submitQR(qrData) {
+    document.getElementById('scanStatus').textContent = 'Processing...';
+    document.getElementById('scanStatus').style.background = '#fff8e1';
+    document.getElementById('scanStatus').style.color = '#f57f17';
+
+    // Get GPS if available
+    let lat = null, lng = null;
+    if (navigator.geolocation) {
+        await new Promise(resolve => {
+            navigator.geolocation.getCurrentPosition(
+                pos => { lat = pos.coords.latitude; lng = pos.coords.longitude; resolve(); },
+                () => resolve(), { timeout: 3000 }
+            );
+        });
+    }
+
+    const formData = new FormData();
+    formData.append('qr_data', qrData);
+    if (lat) formData.append('lat', lat);
+    if (lng) formData.append('lng', lng);
+
+    try {
+        const resp = await fetch('{{ url_for("attendance.qr_scan") }}', { method: 'POST', body: formData });
+        const data = await resp.json();
+        showResult(data.success, data.message, data.action);
+    } catch(err) {
+        showResult(false, 'Network error. Please try again.');
+    }
+}
+
+function submitManualQR() {
+    const val = document.getElementById('manualQR').value.trim();
+    if (!val) return;
+    submitQR(val);
+}
+
+function showResult(success, message, action) {
+    const el = document.getElementById('qrResult');
+    const status = document.getElementById('scanStatus');
+    el.style.display = 'block';
+
+    if (success) {
+        status.textContent = action === 'checkin' ? '✅ Checked In' : '✅ Checked Out';
+        status.style.background = '#e8f5e9'; status.style.color = '#2e7d32';
+        el.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${message}</div>`;
+        setTimeout(() => location.reload(), 2000);
+    } else {
+        status.textContent = '❌ Failed';
+        status.style.background = '#ffebee'; status.style.color = '#c62828';
+        el.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+        setTimeout(() => { scanning = true; html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, qrHandler, () => {}); }, 2500);
+    }
+}
+</script>
+{% endblock %}

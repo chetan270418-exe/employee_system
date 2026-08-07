@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Apply Leave{% endblock %}
+{% block page_title %}Apply for Leave{% endblock %}
+{% block page_subtitle %}Submit a leave request{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 350px; gap:20px; align-items:start;">
+    <!-- Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-paper-plane" style="color:var(--primary); margin-right:8px;"></i>Leave Application</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="leaveForm">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+                    <div class="form-group">
+                        <label class="form-label">Leave Type <span class="required">*</span></label>
+                        <select name="leave_type" class="form-control" required>
+                            <option value="">Select type</option>
+                            <option value="casual">Casual Leave</option>
+                            <option value="sick">Sick Leave</option>
+                            <option value="earned">Earned Leave</option>
+                            <option value="unpaid">Unpaid Leave</option>
+                            <option value="maternity">Maternity Leave</option>
+                            <option value="paternity">Paternity Leave</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Duration</label>
+                        <div style="padding:10px 14px; background:#f0f2ff; border-radius:8px; font-weight:700; color:var(--primary); font-size:16px;" id="daysCount">Select dates below</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">From Date <span class="required">*</span></label>
+                        <input type="date" name="from_date" id="fromDate" class="form-control"
+                               min="{{ today }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">To Date <span class="required">*</span></label>
+                        <input type="date" name="to_date" id="toDate" class="form-control"
+                               min="{{ today }}" required>
+                    </div>
+                    <div class="form-group" style="grid-column:span 2;">
+                        <label class="form-label">Reason <span class="required">*</span></label>
+                        <textarea name="reason" class="form-control" rows="4"
+                                  placeholder="Please provide a brief reason for your leave request..." required></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-paper-plane"></i> Submit Leave Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leave Balance -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"><i class="fas fa-balance-scale" style="color:var(--primary); margin-right:8px;"></i>Leave Balance</h3></div>
+            <div class="card-body">
+                {% if leave_bal %}
+                {% for label, val, color, bg in [
+                    ('Casual Leave', leave_bal.casual_leave, '#1565c0', '#e3f2fd'),
+                    ('Sick Leave', leave_bal.sick_leave, '#880e4f', '#fce4ec'),
+                    ('Earned Leave', leave_bal.earned_leave, '#4a148c', '#f3e5f5')
+                ] %}
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:10px; background:{{ bg }}; border-radius:10px;">
+                    <span style="font-size:13px; font-weight:600; color:{{ color }};">{{ label }}</span>
+                    <span style="font-size:20px; font-weight:800; color:{{ color }};">{{ val }} <small style="font-size:11px; font-weight:400;">days</small></span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p style="color:var(--text-muted); font-size:13px;">Leave balance not configured.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body" style="padding:16px;">
+                <h4 style="font-size:13px; font-weight:700; color:var(--primary); margin:0 0 12px;"><i class="fas fa-info-circle"></i> Leave Policy</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:12px; color:var(--text-muted); line-height:2;">
+                    <li>📅 Apply at least 1 day in advance (sick leave excluded)</li>
+                    <li>✅ Leave approved by HR within 24 hours</li>
+                    <li>💰 Unpaid leave affects salary calculation</li>
+                    <li>🔄 Leave balance updates after approval</li>
+                    <li>❌ Cancel pending requests anytime</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+calculateLeaveDays('fromDate', 'toDate', 'daysCount');
+</script>
+{% endblock %}
