@@ -132,13 +132,7 @@ Open your browser and navigate to **`http://localhost:5000`**.
 
 ## 👥 Demo User Accounts
 
-If you ran `seed.py`, you can test the system using the following credentials:
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **System Admin** | `admin@emptrack.com` | `Admin@123` |
-| **HR Manager** | `hr@emptrack.com` | `Hr@123` |
-| **Employee** | `emp@emptrack.com` | `Emp@123` |
+If you ran `seed.py`, you can test the system using the following credentials      
 
 ---
 
